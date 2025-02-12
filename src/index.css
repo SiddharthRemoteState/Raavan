@@ -1,1 +1,11 @@
 @import "tailwindcss";
+.primary-bg{
+    background-color: #181818;
+}
+.new-note{
+    font-family: "Source Code Pro", serif;
+    background-color: #ffffff05;
+}
+.recent-font{
+    font-family: "Source Code Pro", serif;
+}
