@@ -12,7 +12,7 @@ function App() {
     <div className='h-screen w-screen bg-black flex'>
       <Sidebar/>
       <CentreBar/>
-      <RestoreView/>
+      <RightBar/>
     </div>
   )
 }

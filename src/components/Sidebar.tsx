@@ -6,27 +6,42 @@ import ClosedFolder from '../logos/ClosedFolder.svg'
 import Favorites from '../logos/Favorites.svg'
 import Archived from '../logos/Archived.svg'
 import Trash from '../logos/Trash.svg'
+import { useState } from 'react'
 
 function Sidebar() {
+
+
+    const [Visible,setVisible]=useState(false);
+    const [NewnoteVisible,setNewnoteVisible]=useState(true)
+    const handleClick=()=>{
+        setVisible(!Visible)
+        setNewnoteVisible(!NewnoteVisible)
+    }
+
     const RecentsArray=[{title:"Reflection on the month of june Reflection on the month of june" ,id:123},{title:"Reflection on the month of june" ,id:1234},{title:"Reflection on the month of june" ,id:12345}]
     const FoldersRecord=["Personal","Work","Travel","Events","Finances","Finances","Finances"];
     return (
         // Main Div
         <div className="h-screen w-1/4  py-7.5 border-2  primary-bg flex flex-col gap-7.5">
-
+            
             {/* Nowted & SearchIcon */}
             <div className="flex justify-between items-center px-5 "> 
                 {/* Nowted Logo */}
                 <img src={Nowted} className="" alt="Nowted logo" />
                 {/* Search Icon */}
-                <button><img src={SearchIcon} className="flex self-center cursor-pointer" alt="Search icon" /></button>
+                <button><img src={SearchIcon} className="flex self-center cursor-pointer" alt="Search icon" onClick={handleClick}/></button>
             </div>
 
+            {/* FirstHidden */}
+            <div className={`flex px-5 h-10 ${Visible ? '' : 'hidden'}`}>
+                <img src={SearchIcon} className='pr-3' alt="Search" />
+                <input placeholder='Search Note' className='text-white' />
+            </div>
 
             {/* NewNote */}
-            <div className='px-5 flex justify-center items-center  h-10 w-full'>
-                <div className='flex justify-center items-center  w-full'>
-                <p className="cursor-pointer w-full new-note text-white text-center">+ New Note</p>
+            <div className={`px-5 flex justify-center items-center h-10 w-full ${NewnoteVisible ? '' : 'hidden'}`}>
+                <div className='flex justify-center items-center w-full'>
+                    <p className="cursor-pointer w-full new-note text-white text-center">+ New Note</p>
                 </div>
             </div>
 
