@@ -2,6 +2,7 @@
 import RightBar from './components/RightBar'
 import Sidebar from './components/Sidebar'
 import CentreBar from './components/CentreBar'
+import NoteView from './components/NoteView'
 
 
 function App() {
@@ -10,7 +11,7 @@ function App() {
     <div className='h-screen w-screen bg-black flex'>
       <Sidebar/>
       <CentreBar/>
-      <RightBar/>
+      <NoteView/>
     </div>
   )
 }
