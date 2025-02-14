@@ -8,42 +8,41 @@ import Archived from '../logos/Archived.svg'
 import Trash from '../logos/Trash.svg'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation, useParams } from 'react-router-dom'
+
 
 function Sidebar() {
 
-  const [data, setData] = useState(null);
+  const [nameFolder,setnameFolder]=useState("My New Folder");
+  const [recentdata, setRecentData] = useState(null);
   const [Folder,setFolder]=useState(null);
   const [error, setError] = useState(null);
   const [Errorfolder,setErrorfolder]=useState(null);
 
 //   For Folders Api call
-
-  useEffect(() => {
+    useEffect(() => {
+    console.log("fetching folders");
     axios.get('api/folders')
-      .then(response => {
+        .then(response => {
         setFolder(response.data);
-        console.log(response.data);   
-
-      })
-      .catch(Errorfolder => {
+        })
+        .catch(Errorfolder => {
         setErrorfolder(Errorfolder);
-      });
-  }, []);
-  
-//  For Recents API CALL
+        });
+    }, []);
 
-  useEffect(() => {
-    axios.get('api/notes/recent')
-      .then(response => {
-        setData(response.data); 
-        console.log(data);   
 
-      })
-      .catch(error => {
-        setError(error);
-      });
-  }, []);
+
+    // For Recents APi Call
+    useEffect(() => {
+        axios.get('api/notes/recent')
+        .then(response => {
+            setRecentData(response.data); 
+        })
+        .catch(error => {
+            setError(error);
+        });
+    }, []);
 
 
     const [Visible,setVisible]=useState(false);
@@ -53,22 +52,6 @@ function Sidebar() {
         setNewnoteVisible(!NewnoteVisible)
     }
     
-
-    // const RecentNotes=[{title:"Reflection on the month of june Reflection on the month of june" ,id:123},{title:"Reflection on the month of june" ,id:1234},{title:"Reflection on the month of june" ,id:12345}]
-    // const FoldersRecord=["Personal","Work","Travel","Events","Finances","Finances","Finances"];
-
-    // useEffect(()=>{
-    //     axios.get('https://nowted-server.remotestate.com/notes/recent')
-    //     .then(response=>{
-    //         const recentNotes=response.data.recentNotes;
-    //         recentNotes.forEach(notes => {
-    //             console.log(notes.title);
-    //         });
-    //     })
-    //     .catch(error=>{
-    //         console.log(error);
-    //     })
-    // },[]);
 
     return (
         // Main Div
@@ -96,54 +79,47 @@ function Sidebar() {
             </div>
 
 
-
+            {/* Have to Add Navlink to Recent */}
             {/* Recents Div */}
             <div className='h-39   '>
                 <div className='pl-5 pb-2 text-[#FFFFFF] opacity-60 recent-font'>Recents</div>
                 <ul className='flex-col justify-evenly '>
-                {data && data.recentNotes.slice(0,3).map((arr)=>(
-                    <li key={arr.id} >
-                        <div className='flex pb-1.25'>
-                            <img src={Document} className='pl-5 pr-4 pb-4 opacity-60' ></img>
-                            <p className='h-5 overflow-hidden text-[#FFFFFF] opacity-60 font-semibold'>{arr.title}</p>
-                        </div>
-                    </li>
+                {recentdata && recentdata.recentNotes && recentdata.recentNotes.slice(0,3).map((arr)=>(
+
+                <NavLink
+                to={`/folders/${arr.folder.id}/note/${arr.id}`}
+                key={arr.id}
+                className={({isActive})=>isActive?'flex items-center pl-5 h-10 bg-red-400' : 'flex items-center pl-5 h-10'}
+                >
+                    <div className='flex pb-1.25 items-center'>
+                    <img src={Document} className='pr-4 opacity-60' alt="Document" />
+                    <p className='h-5 overflow-hidden text-[#FFFFFF] opacity-60 font-semibold'>{arr.title}</p>
+                    </div>
+                </NavLink>
+
                 ))}
                 </ul>
             </div>
-            
-            {/* Folders */}
-            {/* <div className='h-[62] w-[75]  pl-5  '>
-                <div className='flex justify justify-between text-white h-5 pr-5'>
-                    <div className='pb-2.5 text-[#FFFFFF] opacity-60'>Folders</div>
-                    <button className='cursor-pointer'><img src={Folder}></img></button>
-                </div>
-                    <ul className='overflow-y-auto max-h-50'>
-                    {FoldersRecord.map((foldername,index)=>(
-                        <li key={index} className='flex items-center h-10'>
-                            <img src={ClosedFolder} className='pr-3.75 text-white' alt="Closed Folder" />
-                            <p className='text-[#FFFFFF] opacity-60'>{foldername}</p>
-                        </li>
-                    ))
-                }
-                    </ul>
-                
-            </div> */}
 
-            <div className='h-[62] w-[75]  pl-5  '>
-                <div className='flex justify justify-between text-white h-5 pr-5'>
+
+
+                 {/* For   Folders */}
+            <div className='h-[62] w-[75]    '>
+                <div className='flex justify justify-between text-white h-5 pr-5 pl-5'>
                     <div className='pb-2.5 text-[#FFFFFF] opacity-60'>Folders</div>
                     <button className='cursor-pointer'><img src={Folderlogo}></img></button>
                 </div>
                     <ul className='overflow-y-auto max-h-50'>
 
-                    {Folder && Folder.folders.map((item,index)=>(
-                        <li key={index} className='flex items-center h-10'>
+                    {Folder && Folder.folders && Folder.folders.map((item,index)=>(
+                        <NavLink to={`/folders/${item.id}`} key={index} className={({isActive})=>isActive?'flex items-center h-10 bg-blue-400 pl-5' : 'flex items-center h-10 pl-5'}>
+
                             <img src={ClosedFolder} className='pr-3.75 text-white' alt="Closed Folder" />
                             <p className='text-[#FFFFFF] opacity-60'>{item.name}</p>
-                        </li>
+                        </NavLink>
                     ))  
                 }
+
                     </ul>
                 
             </div>
@@ -157,16 +133,15 @@ function Sidebar() {
                 </div>
                 <div className='flex w-75 h-10'>
                     <img src={Trash} className='self-center pr-4.25'></img>
-                    <p className='self-center text-[#FFFFFF] opacity-60'>Favorites</p>
+                    <p className='self-center text-[#FFFFFF] opacity-60'>Trash</p>
                 </div>
                 <div className='flex w-75 h-10'>
                     <img src={Archived} className='self-center pr-4.25'></img>
-                    <p className='self-center text-[#FFFFFF] opacity-60'>Favorites</p>
+                    <p className='self-center text-[#FFFFFF] opacity-60'>Archive</p>
                 </div>
             </div>
         </div>
-
-            
+   
 
     );
 }
