@@ -10,12 +10,15 @@ function CentreBar() {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
 
+  const AxiosApi = axios.create({
+    baseURL:'https://nowted-server.remotestate.com'
+})
 
 
   
     useEffect(() => {
 
-      axios.get('/api/notes', {
+      AxiosApi.get('/notes', {
         params: {
           archived: false,
           favorite: false,

@@ -15,6 +15,10 @@ function RightBar(){
     const {noteId}=useParams();
     const[data,setData]=useState(null);
     const [error, setError] = useState(null);
+    const AxiosApi = axios.create({
+        baseURL:'https://nowted-server.remotestate.com'
+    })
+    
 
     const[isVisible,setIsVisble]=useState(false);
 
@@ -22,7 +26,7 @@ function RightBar(){
 
       useEffect(() => {
 
-        axios.get(`/api/notes/${noteId}`)
+        AxiosApi.get(`/notes/${noteId}`)
           .then(response => {
             console.log(data);
             setData(response.data);
