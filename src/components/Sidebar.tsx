@@ -1,14 +1,49 @@
 import Nowted from '../logos/Nowted.svg'
 import SearchIcon from '../logos/searchicon.svg'
 import Document from '../logos/Document.svg'
-import Folder from '../logos/Folderlogo.svg'
+import Folderlogo from '../logos/Folderlogo.svg'
 import ClosedFolder from '../logos/ClosedFolder.svg'
 import Favorites from '../logos/Favorites.svg'
 import Archived from '../logos/Archived.svg'
 import Trash from '../logos/Trash.svg'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import { NavLink } from 'react-router-dom'
 
 function Sidebar() {
+
+  const [data, setData] = useState(null);
+  const [Folder,setFolder]=useState(null);
+  const [error, setError] = useState(null);
+  const [Errorfolder,setErrorfolder]=useState(null);
+
+//   For Folders Api call
+
+  useEffect(() => {
+    axios.get('api/folders')
+      .then(response => {
+        setFolder(response.data);
+        console.log(response.data);   
+
+      })
+      .catch(Errorfolder => {
+        setErrorfolder(Errorfolder);
+      });
+  }, []);
+  
+//  For Recents API CALL
+
+  useEffect(() => {
+    axios.get('api/notes/recent')
+      .then(response => {
+        setData(response.data); 
+        console.log(data);   
+
+      })
+      .catch(error => {
+        setError(error);
+      });
+  }, []);
 
 
     const [Visible,setVisible]=useState(false);
@@ -17,9 +52,24 @@ function Sidebar() {
         setVisible(!Visible)
         setNewnoteVisible(!NewnoteVisible)
     }
+    
 
-    const RecentsArray=[{title:"Reflection on the month of june Reflection on the month of june" ,id:123},{title:"Reflection on the month of june" ,id:1234},{title:"Reflection on the month of june" ,id:12345}]
-    const FoldersRecord=["Personal","Work","Travel","Events","Finances","Finances","Finances"];
+    // const RecentNotes=[{title:"Reflection on the month of june Reflection on the month of june" ,id:123},{title:"Reflection on the month of june" ,id:1234},{title:"Reflection on the month of june" ,id:12345}]
+    // const FoldersRecord=["Personal","Work","Travel","Events","Finances","Finances","Finances"];
+
+    // useEffect(()=>{
+    //     axios.get('https://nowted-server.remotestate.com/notes/recent')
+    //     .then(response=>{
+    //         const recentNotes=response.data.recentNotes;
+    //         recentNotes.forEach(notes => {
+    //             console.log(notes.title);
+    //         });
+    //     })
+    //     .catch(error=>{
+    //         console.log(error);
+    //     })
+    // },[]);
+
     return (
         // Main Div
         <div className="h-screen w-1/4  py-7.5 border-2  primary-bg flex flex-col gap-7.5">
@@ -51,7 +101,7 @@ function Sidebar() {
             <div className='h-39   '>
                 <div className='pl-5 pb-2 text-[#FFFFFF] opacity-60 recent-font'>Recents</div>
                 <ul className='flex-col justify-evenly '>
-                {RecentsArray.slice(0,3).map((arr)=>(
+                {data && data.recentNotes.slice(0,3).map((arr)=>(
                     <li key={arr.id} >
                         <div className='flex pb-1.25'>
                             <img src={Document} className='pl-5 pr-4 pb-4 opacity-60' ></img>
@@ -63,7 +113,7 @@ function Sidebar() {
             </div>
             
             {/* Folders */}
-            <div className='h-[62] w-[75]  pl-5  '>
+            {/* <div className='h-[62] w-[75]  pl-5  '>
                 <div className='flex justify justify-between text-white h-5 pr-5'>
                     <div className='pb-2.5 text-[#FFFFFF] opacity-60'>Folders</div>
                     <button className='cursor-pointer'><img src={Folder}></img></button>
@@ -75,6 +125,24 @@ function Sidebar() {
                             <p className='text-[#FFFFFF] opacity-60'>{foldername}</p>
                         </li>
                     ))
+                }
+                    </ul>
+                
+            </div> */}
+
+            <div className='h-[62] w-[75]  pl-5  '>
+                <div className='flex justify justify-between text-white h-5 pr-5'>
+                    <div className='pb-2.5 text-[#FFFFFF] opacity-60'>Folders</div>
+                    <button className='cursor-pointer'><img src={Folderlogo}></img></button>
+                </div>
+                    <ul className='overflow-y-auto max-h-50'>
+
+                    {Folder && Folder.folders.map((item,index)=>(
+                        <li key={index} className='flex items-center h-10'>
+                            <img src={ClosedFolder} className='pr-3.75 text-white' alt="Closed Folder" />
+                            <p className='text-[#FFFFFF] opacity-60'>{item.name}</p>
+                        </li>
+                    ))  
                 }
                     </ul>
                 
@@ -97,6 +165,9 @@ function Sidebar() {
                 </div>
             </div>
         </div>
+
+            
+
     );
 }
 
