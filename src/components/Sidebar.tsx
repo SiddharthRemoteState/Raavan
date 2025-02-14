@@ -11,35 +11,39 @@ import axios from "axios";
 import { NavLink, useLocation, useParams } from "react-router-dom";
 
 function Sidebar() {
-  const [nameFolder, setnameFolder] = useState("My New Folder");
-  const [recentdata, setRecentData] = useState(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [newName, setNewName] = useState<string>("New_Folder");
+  const [isediting, setIsEdited] = useState(false);
+  const [RecentNote, setRecentNote] = useState("My New Recent Note");
+  const [dependencyRename,setDependencyRename] = useState("");
+  const [notesname, setNotesName] = useState("My New Folder");
+  const [recentdata, setRecentData] = useState([]);
   const [Folder, setFolder] = useState([]);
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
 
   const AxiosApi = axios.create({
-    baseURL:'https://nowted-server.remotestate.com'
-})
+    baseURL: "https://nowted-server.remotestate.com",
+  });
 
   //   For Folders Api call
   useEffect(() => {
     console.log("fetching folders");
-    AxiosApi
-      .get("/folders")
+    AxiosApi.get("/folders")
       .then((response) => {
         setFolder(response.data.folders);
       })
       .catch((Errorfolder) => {
         setErrorfolder(Errorfolder);
       });
-  }, []);
+  }, [dependencyRename]);
 
   // For Recents APi Call
   useEffect(() => {
-    AxiosApi
-      .get("/notes/recent")
+    AxiosApi.get("/notes/recent")
       .then((response) => {
-        setRecentData(response.data);
+        setRecentData(response.data.recentNotes);
       })
       .catch((error) => {
         setError(error);
@@ -51,19 +55,53 @@ function Sidebar() {
   const [Visible, setVisible] = useState(false);
   const [NewnoteVisible, setNewnoteVisible] = useState(true);
 
+  const handleRename= async(id)=>{
+      console.log(id);
+      setIsEdited(false)
+
+      try{
+        const response=await AxiosApi.patch(`/folders/${id}`,{
+          name:newName
+        });
+        console.log('Folder Renamed',response.data);
+      }
+      catch(error){
+        console.error('Error creating post:', error);
+      }
+      setDependencyRename("folder");
+  }
+
   // Search Functionality Visibility
   const handleClick = () => {
     setVisible(!Visible);
     setNewnoteVisible(!NewnoteVisible);
+    
   };
 
-  const AddFolder = () => {
-    const newfolder={name:nameFolder}
-    console.log(newfolder)
-    setFolder([newfolder,...Folder])
-    console.log(Folder)
+  const AddFolder = async() => {
+    try {
+      const response = await AxiosApi.post('/folders', {
+        name: "New Folder"
+      });
+      console.log('Post created:', response.data);
+    } catch (error) {
+      console.error('Error creating post:', error);
+    }
+    console.log(Folder);
+    setDependencyRename("New folder");
   };
 
+  //Renamimg folder doublclick
+  const rename = (id: string, name: string) => {
+    console.log(id, name);
+    setEditingId(id);
+    setIsEdited(true);
+    setNewName(name);
+
+    
+      
+    };
+  
   return (
     // Main Div
     <div className="h-screen w-1/4  py-7.5 border-2  primary-bg flex flex-col gap-7.5">
@@ -109,8 +147,8 @@ function Sidebar() {
         </div>
         <ul className="flex-col justify-evenly ">
           {recentdata &&
-            recentdata.recentNotes &&
-            recentdata.recentNotes.slice(0, 3).map((arr) => (
+            recentdata &&
+            recentdata.slice(0, 3).map((arr) => (
               <NavLink
                 to={`/folders/${arr.folder.id}/note/${arr.id}`}
                 key={arr.id}
@@ -143,27 +181,34 @@ function Sidebar() {
             <img src={Folderlogo}></img>
           </button>
         </div>
-        <ul className="overflow-y-auto max-h-50">
-          {Folder &&
-            Folder &&
-            Folder.map((item, index) => (
-              <NavLink
-                to={`/folders/${item.id}`}
-                key={index}
-                className={({ isActive }) =>
-                  isActive
-                    ? "flex items-center h-10 bg-blue-400 pl-5"
-                    : "flex items-center h-10 pl-5"
-                }
-              >
-                <img
-                  src={ClosedFolder}
-                  className="pr-3.75 text-white"
-                  alt="Closed Folder"
-                />
-                <p className="text-[#FFFFFF] opacity-60">{item.name}</p>
-              </NavLink>
-            ))}
+        <ul className="overflow-y-auto max-h-[200px]">
+          {Folder.map((folders, index) => (
+            <li key={folders.id}>
+              {isediting && editingId === folders.id ? (
+                <div className="flex">
+                <img src={ClosedFolder}></img>
+                <input className="h-10 pl-5 w-full" type="text" value={newName} onChange={(e)=>setNewName(e.target.value)}  onKeyDown={(e)=>e.key==="Enter" && handleRename(folders.id)} autoFocus/>
+                </div>
+              ) : (
+                <NavLink
+                  to={`/folders/${folders.id}`}
+                  onDoubleClick={() => rename(folders.id, folders.name)}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "flex items-center h-10 bg-blue-400 pl-5"
+                      : "flex items-center h-10 pl-5"
+                  }
+                >
+                  <img
+                    src={ClosedFolder}
+                    className="pr-3.75 text-white"
+                    alt="Closed Folder"
+                  />
+                  <p className="text-[#FFFFFF] opacity-60">{folders.name}</p>
+                </NavLink>
+              )}
+            </li>
+          ))}
         </ul>
       </div>
 
