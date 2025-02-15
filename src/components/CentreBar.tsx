@@ -45,7 +45,7 @@ function CentreBar() {
 
   return (
     <div className="w-1/4 bg-[#1C1C1C] h-full">
-      <div className="w-full h-full pl-5 pr-5">
+      <div className="w-full pl-5 pr-5">
         {/* Personal name div */}
         {data && data.notes && data.notes.length > 0 && (
           <div className="pt-7.5 pr-12.5 pb-7.5 font-semibold text-white text-[22px]">
@@ -54,7 +54,7 @@ function CentreBar() {
           </div>
         )}
 
-        <div className="h-full overflow-y-auto">
+        <div className=" overflow-y-auto">
           {data && data.notes && data.notes.map((arr, index) => (
             <NavLink to={`/folders/${arr.folder.id}/note/${arr.id}`}  key={index} >
               <div className="w-full h-24.5 bg-[#FFFFFF33] mb-4 p-5 flex-col ">

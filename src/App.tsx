@@ -5,6 +5,7 @@ import CentreBar from './components/CentreBar'
 import NoteView from './components/NoteView'
 import RestoreView from './components/RestoreView'
 import Home from './Pages/Home'
+import NewNote from './Pages/NewNote'
 import { BrowserRouter, Route,Routes } from 'react-router-dom'
 import Trash from './Pages/Trash'
 
@@ -28,6 +29,9 @@ function App() {
 
         <Route path='/folders/:trashnotes' element={<Home/>}/>
         <Route path='/folders/:trashnotes/note/:noteId' element={<Home/>}/>
+
+        <Route path='/folders/:folderId/note/newnote' element={<NewNote/>}/>
+        
 
 
         

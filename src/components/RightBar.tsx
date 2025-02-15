@@ -15,12 +15,13 @@ function RightBar(){
     const {noteId}=useParams();
     const[data,setData]=useState(null);
     const [error, setError] = useState(null);
+    // const [note,setNote]=useState([]);
+    const[isVisible,setIsVisble]=useState(false);
+
     const AxiosApi = axios.create({
         baseURL:'https://nowted-server.remotestate.com'
     })
     
-
-    const[isVisible,setIsVisble]=useState(false);
 
     const handleToggle=()=>{setIsVisble(!isVisible)};
 
@@ -28,14 +29,25 @@ function RightBar(){
 
         AxiosApi.get(`/notes/${noteId}`)
           .then(response => {
-            console.log(data);
-            setData(response.data);
+              setData(response.data);
+              console.log(data);
           })
           .catch(error => {
             setError(error);
           });
           
       }, [noteId]);
+
+
+    //   const HandleATF=()=>{
+    //         // AxiosApi.patch(`/note/${noteId}`,{
+    //         //     isFavorite:!(data.note.isFavorite)
+    //         // })
+            
+    //     }
+        
+        // console.log(data);
+
 
       if(noteId===undefined)return <NoteView/>
     return (
@@ -55,15 +67,16 @@ function RightBar(){
             {/* On Clicking Add to Favorites Archive & delete */}
             <div className={`w-60 h-50 rounded-[6px] bg-[#333333] pl-4 top-20 right-20 flex-col justify-around absolute ${isVisible ? '' : 'hidden'}`} 
         id="FAD">
-                <div className='flex pt-4 w-full'>
+                <div className='flex pt-4 w-full' onClick={() => HandleATF()}>
                     <img src={Favorite} className='pr-4 w-10 h-8'></img>
-                    <p className='text-[#FFFFFF] text-[16px] '>Add to Favourites</p>
+                    <p className='text-[#FFFFFF] text-[16px]'>`${data && data.note && (data.note.isFavorite === undefined) ? 'Add to Favorite' : data && data.note && data.note.isFavorite ? "Remove From Favorites" : "Add to Favorite"}</p>
+
                 </div>
                 <div className='flex pt-5 pb-5 w-full items-center'>
                     <img src={Archive} className='pr-4 w-10 h-8'></img>
-                    <p className='text-[#FFFFFF] text-[16px]'>Archive</p>
+                    <p className='text-[#FFFFFF] text-[16px]'>{`${data && data.note & data.note.isArchived}? Unarchive : Archive`}</p>
                 </div>
-                <div className='w-[172px] border-t border-[#FFFFFF05] w-full'> </div>
+                <div className='w-[172px] border-t border-[#FFFFFF40] w-full'> </div>
                 <div className='flex pt-4 items-center'>
                     <img src={Delete} className='pr-4 w-10 h-8'></img>
                     <p className='text-[#FFFFFF] text-[16px]'>Delete</p>
@@ -93,9 +106,9 @@ function RightBar(){
             </div>
 
             {/* Content Section */}
-            <div className="pt-7.5 overflow-auto pb-27">
+            {/* <div className="pt-7.5 overflow-auto pb-27">
                 <p className="text-[#FFFFFF] text-400">{data && data.note ? data.note.content: ""}</p>
-            </div>
+            </div> */}
         </div>
         </>
     );

@@ -8,7 +8,7 @@ import Archived from "../logos/Archived.svg";
 import Trash from "../logos/Trash.svg";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { NavLink, useLocation, useParams } from "react-router-dom";
+import { NavLink, Link ,useLocation, useParams } from "react-router-dom";
 
 function Sidebar() {
 
@@ -20,9 +20,9 @@ function Sidebar() {
   const [Folder, setFolder] = useState([]);
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
+  const [FolderSelected,setFolderSelected]=useState(false);
 
-
-  const {noteId}=useParams();
+  const {noteId,folderId}=useParams();
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
@@ -30,7 +30,7 @@ function Sidebar() {
 
   //   For Folders Api call
   useEffect(() => {
-    console.log("fetching folders");
+    // console.log("fetching folders");
     AxiosApi.get("/folders")
       .then((response) => {
         setFolder(response.data.folders);
@@ -56,15 +56,17 @@ function Sidebar() {
   const [Visible, setVisible] = useState(false);
   const [NewnoteVisible, setNewnoteVisible] = useState(true);
 
+  
+
   const handleRename= async(id)=>{
-      console.log(id);
+      // console.log(id);
       setIsEdited(false)
 
       try{
         const response=await AxiosApi.patch(`/folders/${id}`,{
           name:newName
         });
-        console.log('Folder Renamed',response.data);
+        // console.log('Folder Renamed',response.data);
       }
       catch(error){
         console.error('Error creating post:', error);
@@ -84,17 +86,25 @@ function Sidebar() {
       const response = await AxiosApi.post('/folders', {
         name: "New Folder"
       });
-      console.log('Post created:', response.data);
+      // console.log('Post created:', response.data);
     } catch (error) {
       console.error('Error creating post:', error);
     }
-    console.log(Folder);
+    // console.log(Folder);
     setDependencyRename("New folder");
   };
 
+  const NewNoteClicked=()=>{
+    setFolderSelected(true);
+    if(FolderSelected && folderId==='undefined'){
+      alert('One of the folder needs to be Selected');
+      setFolderSelected(false);
+    }
+    // console.log("Iwas Clicked")
+  }
+
   //Renamimg folder doublclick
   const rename = (id: string, name: string) => {
-    console.log(id, name);
     setEditingId(id);
     setIsEdited(true);
     setNewName(name);
@@ -133,11 +143,12 @@ function Sidebar() {
           NewnoteVisible ? "" : "hidden"
         }`}
       >
-        <div className="flex justify-center items-center w-full">
-          <p className="cursor-pointer w-full new-note text-white text-center">
+        {/* if(folderId) */}
+        <Link to={`/folders/${folderId}/note/newnote`} className="flex justify-center items-center w-full" >
+          <button className="cursor-pointer w-full new-note text-white text-center" onClick={NewNoteClicked}>
             + New Note
-          </p>
-        </div>
+          </button>
+        </Link>
       </div>
 
 
@@ -188,7 +199,7 @@ function Sidebar() {
               {isediting && editingId === folders.id ? (
                 <div className="flex">
                 <img src={ClosedFolder}></img>
-                <input className="h-10 pl-5 w-full" type="text" value={newName} onChange={(e)=>setNewName(e.target.value)}  onKeyDown={(e)=>e.key==="Enter" && handleRename(folders.id)} autoFocus/>
+                <input className="h-10 pl-5 w-full" type="text" value={newName} onChange={setNewName(e.target.value)}   onKeyDown={(e)=>e.key==="Enter" && handleRename(folders.id)} autoFocus/>
                 </div>
               ) : (
                 <NavLink
