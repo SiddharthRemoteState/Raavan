@@ -19,6 +19,18 @@ function App() {
         <Route path='/folders/:folderId' element={<Home/>}/>
         <Route path='/folders/:folderId/note/:noteId' element={<Home/>}/>
         <Route path='/trash' element={<Trash/>}/>
+
+        <Route path='/folders/:favoritenotes' element={<Home/>}/>
+        <Route path='/folders/:favoritenotes/note/:noteId' element={<Home/>}/>
+
+        <Route path='/folders/:archivenotes' element={<Home/>}/>
+        <Route path='/folders/:archivenotes/note/:noteId' element={<Home/>}/>
+
+        <Route path='/folders/:trashnotes' element={<Home/>}/>
+        <Route path='/folders/:trashnotes/note/:noteId' element={<Home/>}/>
+
+
+        
       </Routes>
     </BrowserRouter>
   )

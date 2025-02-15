@@ -15,13 +15,14 @@ function Sidebar() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState<string>("New_Folder");
   const [isediting, setIsEdited] = useState(false);
-  const [RecentNote, setRecentNote] = useState("My New Recent Note");
   const [dependencyRename,setDependencyRename] = useState("");
-  const [notesname, setNotesName] = useState("My New Folder");
   const [recentdata, setRecentData] = useState([]);
   const [Folder, setFolder] = useState([]);
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
+
+
+  const {noteId}=useParams();
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
@@ -139,7 +140,7 @@ function Sidebar() {
         </div>
       </div>
 
-      {/* Have to Add Navlink to Recent */}
+
       {/* Recents Div */}
       <div className="h-39   ">
         <div className="pl-5 pb-2 text-[#FFFFFF] opacity-60 recent-font">
@@ -215,18 +216,22 @@ function Sidebar() {
       {/* More */}
       <div className="pl-5 ">
         <div className="font-600 text-[#FFFFFF] opacity-60">More</div>
-        <div className="flex w-75 h-10 self-center">
+
+        <NavLink to="/folders/favorite" className="flex w-75 h-10 self-center">
           <img src={Favorites} className="self-center pr-4.25"></img>
           <p className="self-center text-[#FFFFFF] opacity-60">Favorites</p>
-        </div>
-        <div className="flex w-75 h-10">
+        </NavLink>
+
+        <NavLink to="/folders/trash" className="flex w-75 h-10">
           <img src={Trash} className="self-center pr-4.25"></img>
           <p className="self-center text-[#FFFFFF] opacity-60">Trash</p>
-        </div>
-        <div className="flex w-75 h-10">
+        </NavLink>
+
+        <NavLink to="/folders/archive" className="flex w-75 h-10">
           <img src={Archived} className="self-center pr-4.25"></img>
           <p className="self-center text-[#FFFFFF] opacity-60">Archive</p>
-        </div>
+        </NavLink>
+
       </div>
     </div>
   );

@@ -14,24 +14,24 @@ function CentreBar() {
     baseURL:'https://nowted-server.remotestate.com'
 })
 
-
+  const notesTitle=folderId === 'archive'?'archive':  folderId === 'favorite'? 'favorite' :  folderId === 'trash' ? 'trash' : folderId;
   
     useEffect(() => {
 
+      const archived=folderId==='archive'? true:false;
+      const favorite=folderId==='favorite'? true:undefined;
+      const deleted=folderId==='trash'? true:false;
+      const folderById = folderId === 'archive' || folderId === 'favorite' || folderId === 'trash' ? undefined : folderId;
+
       AxiosApi.get('/notes', {
         params: {
-          archived: false,
-          favorite: false,
-          deleted: false,
-          folderId,
+          archived,
+          favorite,
+          deleted,
+          folderId:folderById,
           page: 1,
           limit: 10,
-        },
-        headers: {
-          'Cache-Control': 'no-cache',  // Disable caching
-          'Pragma': 'no-cache',         // Disable caching
-          'Expires': '0',               // Disable caching
-        },
+        }
       })
         .then(response => {
           setData(response.data);
@@ -41,7 +41,7 @@ function CentreBar() {
         });
     }, [folderId]);
   
-    
+    // data.notes[0].folder.name
 
   return (
     <div className="w-1/4 bg-[#1C1C1C] h-full">
@@ -49,7 +49,8 @@ function CentreBar() {
         {/* Personal name div */}
         {data && data.notes && data.notes.length > 0 && (
           <div className="pt-7.5 pr-12.5 pb-7.5 font-semibold text-white text-[22px]">
-            {data.notes[0].folder.name===null?"No Notes" : data.notes[0].folder.name} 
+            {(notesTitle === 'archive' || notesTitle === 'favorite' || notesTitle === 'trash') ? `${notesTitle} notes` : data.notes[0].folder.name}
+
           </div>
         )}
 
