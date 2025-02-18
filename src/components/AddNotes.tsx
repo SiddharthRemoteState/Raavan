@@ -7,12 +7,15 @@ import Calendar from "../logos/Calendar.svg";
 import Folder from "../logos/Folderlogo.svg"; 
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 // https://nowted-server.remotestate.com/notes
 
 
-function AddNotes() {
+function AddNotes({notesChange,setNotesChange}) {
+
+    const navigate=useNavigate();
     const [isVisible, setIsVisible] = useState(false);
     const handleToggle = () => { setIsVisible(!isVisible); };
     const [NotesTitle,setNotesTitle]=useState("Your Note title goes Here");
@@ -24,13 +27,6 @@ function AddNotes() {
       });
     
 
-//    "folderId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-//   "title": "string",
-//   "content": "string",
-//   "isFavorite": true,
-//   "isArchived": true
-
-
     // Submit button clicked & New Note Added
     const SubmitBtnClick=()=>{
         const notesdata={
@@ -39,12 +35,19 @@ function AddNotes() {
             title:NotesTitle,
         }
         try{
-            const response= AxiosApi.post('/notes', notesdata);
             console.log(notesdata)
+            const response= AxiosApi.post('/notes', notesdata).then(response=>{setNotesChange(!notesChange);})
         }
         catch (error) {
             console.error('Error creating post:', error);
         }
+        navigate(`/folders/${folderId}`);
+
+        // console.log(notesChange);
+
+        
+        // console.log(notesChange);
+        
     }
 
 

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,createContext } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 
 
 
-function CentreBar() {
+function NotesList({notesChange,setNotesChange,favoritesChange,setFavoritesChange,archivedChange,setArchivedChange,deleteClicked,setDeleteClicked,restore,setRestore}) {
+  
   const {folderId}=useParams();
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -15,7 +16,10 @@ function CentreBar() {
 })
 
   const notesTitle=folderId === 'archive'?'archive':  folderId === 'favorite'? 'favorite' :  folderId === 'trash' ? 'trash' : folderId;
-  
+
+
+
+    /////For Notes
     useEffect(() => {
 
       const archived=folderId==='archive'? true:false;
@@ -39,9 +43,11 @@ function CentreBar() {
         .catch(error => {
           setError(error);
         });
-    }, [folderId]);
+        console.log(restore)
+    }, [folderId,notesChange,favoritesChange,archivedChange,deleteClicked,restore]);
   
-    // data.notes[0].folder.name
+    
+    
 
   return (
     <div className="w-1/4 bg-[#1C1C1C] h-full">
@@ -56,7 +62,7 @@ function CentreBar() {
 
         <div className=" overflow-y-auto">
           {data && data.notes && data.notes.map((arr, index) => (
-            <NavLink to={`/folders/${arr.folder.id}/note/${arr.id}`}  key={index} >
+            <NavLink to={`/folders/${folderId}/note/${arr.id}`}  key={index} >
               <div className="w-full h-24.5 bg-[#FFFFFF33] mb-4 p-5 flex-col ">
               <div className="text-white flex">{arr.title}</div>
               <div className="flex w-full">
@@ -67,9 +73,20 @@ function CentreBar() {
             </NavLink>
           ))}
         </div>
+        
+
+        {/* <div className="flex justify-around">
+          <div>
+            <button className="bg-blue-600 text-white rounded-[6px">Prev</button>
+          </div>
+          <div>
+            <button className="bg-blue-600 text-white rounded-[6px">Next</button>
+          </div>
+        </div> */}
+
       </div>
     </div>
   );
 }
 
-export default CentreBar;
+export default NotesList;

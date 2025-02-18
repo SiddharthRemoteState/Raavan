@@ -7,14 +7,21 @@ import Delete from '../logos/Trash.svg'
 import axios from 'axios'
 import { useState,useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import NoteView from './NoteView'
+import ClosedNoteView from './ClosedNoteView'
+import Trash from '../Pages/Trash'
+import RestoreView from './RestoreView'
+import { createContext } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-
-function RightBar(){
+function RightBar({notesChange,setNotesChange,favoritesChange,setFavoritesChange,archivedChange,setArchivedChange,deleteClicked,setDeleteClicked}){
     
+    const navigate=useNavigate();
     const {noteId}=useParams();
+    const {folderId}=useParams();
     const[data,setData]=useState(null);
     const [error, setError] = useState(null);
+    const [isFavorite,setIsFavorite]=useState(true);
+    const [isArchived,setIsArchived]=useState(true);
     // const [note,setNote]=useState([]);
     const[isVisible,setIsVisble]=useState(false);
 
@@ -30,7 +37,8 @@ function RightBar(){
         AxiosApi.get(`/notes/${noteId}`)
           .then(response => {
               setData(response.data);
-              console.log(data);
+              setIsFavorite(data.note.isFavorite);
+              setIsArchived(data.note.isArchived);
           })
           .catch(error => {
             setError(error);
@@ -39,17 +47,45 @@ function RightBar(){
       }, [noteId]);
 
 
-    //   const HandleATF=()=>{
-    //         // AxiosApi.patch(`/note/${noteId}`,{
-    //         //     isFavorite:!(data.note.isFavorite)
-    //         // })
-            
-    //     }
-        
-        // console.log(data);
+    const HandleAddToFavorite=()=>{
+        setIsFavorite(!isFavorite);
+        AxiosApi.patch(`/notes/${noteId}`,{
+            isFavorite
+        })
+        .then(response=>{
+            AxiosApi.get(`/notes/${noteId}`)
+            .then(response=>{
+            setData(response.data)
+            setFavoritesChange(!favoritesChange)
+        })
+        })
+    }
 
 
-      if(noteId===undefined)return <NoteView/>
+    const HandleAddToArchive=()=>{
+        setIsArchived(!isArchived);
+        AxiosApi.patch(`/notes/${noteId}`,{
+            isArchived
+        })
+        .then(response=>{
+            AxiosApi.get(`/notes/${noteId}`)
+            .then(response=>{
+            setData(response.data)
+            setArchivedChange(!archivedChange);
+            navigate(`/folders/${folderId}`);
+        })
+        })
+    }
+
+    const HandleDelete=()=>{
+        AxiosApi.delete(`/notes/${noteId}`)
+        setDeleteClicked(!deleteClicked)
+        console.log("Deleted ")
+    }
+
+
+      if(noteId===undefined)return <ClosedNoteView/>
+      if(folderId=='trash')return <RestoreView/>
     return (
         <>
         <div className="w-1/2 bg-[#181818] px-12.5">
@@ -64,20 +100,20 @@ function RightBar(){
                 </div>
             </div>
             
-            {/* On Clicking Add to Favorites Archive & delete */}
+            {/* On Clicking make them visible & block them Add to Favorites Archive & delete */}
             <div className={`w-60 h-50 rounded-[6px] bg-[#333333] pl-4 top-20 right-20 flex-col justify-around absolute ${isVisible ? '' : 'hidden'}`} 
         id="FAD">
-                <div className='flex pt-4 w-full' onClick={() => HandleATF()}>
+                <div className='flex pt-4 w-full hover:bg-blue-500' onClick={HandleAddToFavorite} >
                     <img src={Favorite} className='pr-4 w-10 h-8'></img>
-                    <p className='text-[#FFFFFF] text-[16px]'>`${data && data.note && (data.note.isFavorite === undefined) ? 'Add to Favorite' : data && data.note && data.note.isFavorite ? "Remove From Favorites" : "Add to Favorite"}</p>
+                    <p className='text-[#FFFFFF] text-[16px] '>{`${data && data.note && (data.note.isFavorite === undefined) ? 'Add to Favorite' : data && data.note && data.note.isFavorite ? "Remove From Favorites" : "Add to Favorite"}`}</p>
 
                 </div>
-                <div className='flex pt-5 pb-5 w-full items-center'>
+                <div className='flex pt-5 pb-5 w-full hover:bg-blue-500 items-center' onClick={HandleAddToArchive}>
                     <img src={Archive} className='pr-4 w-10 h-8'></img>
-                    <p className='text-[#FFFFFF] text-[16px]'>{`${data && data.note & data.note.isArchived}? Unarchive : Archive`}</p>
+                    <p className='text-[#FFFFFF] text-[16px]'>{`${data && data.note && (data.note.isArchived === undefined) ? 'Archive' : data && data.note && data.note.isArchived ? "Unarchive" : "Archive"}`}</p>
                 </div>
-                <div className='w-[172px] border-t border-[#FFFFFF40] w-full'> </div>
-                <div className='flex pt-4 items-center'>
+
+                <div className='flex pt-4 items-center hover:bg-blue-500' onClick={HandleDelete}>
                     <img src={Delete} className='pr-4 w-10 h-8'></img>
                     <p className='text-[#FFFFFF] text-[16px]'>Delete</p>
                 </div>

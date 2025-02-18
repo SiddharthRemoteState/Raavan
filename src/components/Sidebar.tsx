@@ -6,9 +6,9 @@ import ClosedFolder from "../logos/ClosedFolder.svg";
 import Favorites from "../logos/Favorites.svg";
 import Archived from "../logos/Archived.svg";
 import Trash from "../logos/Trash.svg";
-import { useEffect, useState } from "react";
+import { useEffect, useState,createContext } from "react";
 import axios from "axios";
-import { NavLink, Link ,useLocation, useParams } from "react-router-dom";
+import { NavLink, Link , useParams } from "react-router-dom";
 
 function Sidebar() {
 
@@ -21,8 +21,11 @@ function Sidebar() {
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
   const [FolderSelected,setFolderSelected]=useState(false);
-
+  const [Visible, setVisible] = useState(false);
+  const [NewnoteVisible, setNewnoteVisible] = useState(true);
   const {noteId,folderId}=useParams();
+  // const  [RouteState,setRouteState]=useState(`/folders/${folderId}/note/newnote`);
+
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
@@ -53,8 +56,7 @@ function Sidebar() {
 
   // newFolder = [new , ...Folder]
 
-  const [Visible, setVisible] = useState(false);
-  const [NewnoteVisible, setNewnoteVisible] = useState(true);
+  
 
   
 
@@ -90,13 +92,12 @@ function Sidebar() {
     } catch (error) {
       console.error('Error creating post:', error);
     }
-    // console.log(Folder);
+    setFolderSelected(true)
     setDependencyRename("New folder");
   };
 
   const NewNoteClicked=()=>{
-    setFolderSelected(true);
-    if(FolderSelected && folderId==='undefined'){
+    if(FolderSelected===false && (folderId==='undefined' || folderId==='archive' || folderId==='trash' || folderId==='favorite')){
       alert('One of the folder needs to be Selected');
       setFolderSelected(false);
     }

@@ -1,6 +1,6 @@
 import Bigdoc from '../logos/DocumentBig.svg'
 
-function NoteView(){
+function ClosedNoteView(){
     return (
         <div className="w-1/2 bg-[#181818] px-12.5 min-h-screen flex justify-center items-center">
             <div className='flex flex-col justify-center items-center'>
@@ -14,4 +14,4 @@ function NoteView(){
       );
       
 }
-export default NoteView;
+export default ClosedNoteView;
