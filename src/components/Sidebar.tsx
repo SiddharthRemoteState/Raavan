@@ -6,47 +6,60 @@ import ClosedFolder from "../logos/ClosedFolder.svg";
 import Favorites from "../logos/Favorites.svg";
 import Archived from "../logos/Archived.svg";
 import Trash from "../logos/Trash.svg";
-import { useEffect, useState,createContext } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { NavLink, Link , useParams } from "react-router-dom";
+import { NavLink, Link, useParams } from "react-router-dom";
 
 function Sidebar() {
-
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newName, setNewName] = useState<string>("New_Folder");
+  // for storing new folder name by default it is New Folder
+  const [newName, setNewName] = useState<string | null>("New_Folder");
+  // this is for when you are finished editing your folder name
   const [isediting, setIsEdited] = useState(false);
-  const [dependencyRename,setDependencyRename] = useState("");
+  // whenever we rename a folder it changes & then folders are rendered again
+  const [dependencyRename, setDependencyRename] = useState("");
+  // recentnotes are stored in recentdata
   const [recentdata, setRecentData] = useState([]);
+  // folders are stored in Foldr
   const [Folder, setFolder] = useState([]);
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
-  const [FolderSelected,setFolderSelected]=useState(false);
+  // used to ensure at least one folder is Selected when adding new note
+  const [FolderSelected, setFolderSelected] = useState(false);
+  // On clicking Search Icon an input appears to track that
   const [Visible, setVisible] = useState(false);
+  // to track will there be an input for Search or Adding New Note Feature
   const [NewnoteVisible, setNewnoteVisible] = useState(true);
-  const {noteId,folderId}=useParams();
-  // const  [RouteState,setRouteState]=useState(`/folders/${folderId}/note/newnote`);
+  const [isLoadingRecents, setIsLoadingRecents] = useState(false);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
 
+  const { folderId } = useParams();
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
   });
 
-  //   For Folders Api call
+  //Fetching Folders in Side Bar
+  // rerenders When U change folder name
   useEffect(() => {
-    // console.log("fetching folders");
+    setIsLoadingFolders(true);
     AxiosApi.get("/folders")
       .then((response) => {
         setFolder(response.data.folders);
+        setIsLoadingFolders(false);
       })
       .catch((Errorfolder) => {
         setErrorfolder(Errorfolder);
       });
   }, [dependencyRename]);
 
-  // For Recents APi Call
+  // Fetching Recents
+  // Will run only once
   useEffect(() => {
+    setIsLoadingRecents(true);
     AxiosApi.get("/notes/recent")
       .then((response) => {
+        setIsLoadingRecents(false);
         setRecentData(response.data.recentNotes);
       })
       .catch((error) => {
@@ -54,66 +67,64 @@ function Sidebar() {
       });
   }, []);
 
-  // newFolder = [new , ...Folder]
+  const handleRename = async (id) => {
+    //You are Finished Editing your Foldername
+    setIsEdited(false);
 
-  
-
-  
-
-  const handleRename= async(id)=>{
-      // console.log(id);
-      setIsEdited(false)
-
-      try{
-        const response=await AxiosApi.patch(`/folders/${id}`,{
-          name:newName
-        });
-        // console.log('Folder Renamed',response.data);
-      }
-      catch(error){
-        console.error('Error creating post:', error);
-      }
-      setDependencyRename("folder");
-  }
+    try {
+      const response = await AxiosApi.patch(`/folders/${id}`, {
+        name: newName,
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+    }
+    // Changed Folder name so they should be re-rendered
+    setDependencyRename("folder");
+  };
 
   // Search Functionality Visibility
   const handleClick = () => {
     setVisible(!Visible);
     setNewnoteVisible(!NewnoteVisible);
-    
   };
 
-  const AddFolder = async() => {
+  const AddFolder = async () => {
     try {
-      const response = await AxiosApi.post('/folders', {
-        name: "New Folder"
+      const response = await AxiosApi.post("/folders", {
+        name: "New Folder",
       });
-      // console.log('Post created:', response.data);
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error("Error creating post:", error);
     }
-    setFolderSelected(true)
+    setFolderSelected(true);
     setDependencyRename("New folder");
   };
 
-  const NewNoteClicked=()=>{
-    if(FolderSelected===false && (folderId==='undefined' || folderId==='archive' || folderId==='trash' || folderId==='favorite')){
-      alert('One of the folder needs to be Selected');
+  const NewNoteClicked = () => {
+    // At least one folder needs to be selected & checking FolderSelected so that this doesnot appear on first reload
+    if (
+      FolderSelected === false &&
+      (folderId === "undefined" ||
+        folderId === "archive" ||
+        folderId === "trash" ||
+        folderId === "favorite")
+    ) {
+      alert("One of the folder needs to be Selected");
       setFolderSelected(false);
     }
     // console.log("Iwas Clicked")
-  }
+  };
 
-  //Renamimg folder doublclick
-  const rename = (id: string, name: string) => {
+  //Renamimg folder on doublclick
+  const rename = (id, name) => {
+    // to track which folder has been double clicked
     setEditingId(id);
+    //you are finished editing your Folder name
     setIsEdited(true);
+    //For Storing New Folder Name
     setNewName(name);
+  };
 
-    
-      
-    };
-  
   return (
     // Main Div
     <div className="h-screen w-1/4  py-7.5 border-2  primary-bg flex flex-col gap-7.5">
@@ -132,97 +143,123 @@ function Sidebar() {
         </button>
       </div>
 
-      {/* FirstHidden */}
+      {/* FirstHidden first hidden on Clicking Search Icon this will be Visible*/}
       <div className={`flex px-5 h-10 ${Visible ? "" : "hidden"}`}>
         <img src={SearchIcon} className="pr-3" alt="Search" />
         <input placeholder="Search Note" className="text-white" />
       </div>
 
-      {/* NewNote */}
+      {/* NewNote  first visible on Clicking Search Icon this will be Hidden*/}
       <div
         className={`px-5 flex justify-center items-center h-10 w-full ${
           NewnoteVisible ? "" : "hidden"
         }`}
       >
-        {/* if(folderId) */}
-        <Link to={`/folders/${folderId}/note/newnote`} className="flex justify-center items-center w-full" >
-          <button className="cursor-pointer w-full new-note text-white text-center" onClick={NewNoteClicked}>
+        {/*  */}
+        <Link
+          to={`/folders/${folderId}/note/newnote`}
+          className="flex justify-center items-center w-full"
+        >
+          <button
+            className="cursor-pointer w-full new-note text-white text-center"
+            onClick={NewNoteClicked}
+          >
             + New Note
           </button>
         </Link>
       </div>
 
-
-      {/* Recents Div */}
+      {/* Recents Notes */}
       <div className="h-39   ">
         <div className="pl-5 pb-2 text-[#FFFFFF] opacity-60 recent-font">
           Recents
         </div>
-        <ul className="flex-col justify-evenly ">
-          {recentdata &&
-            recentdata &&
-            recentdata.slice(0, 3).map((arr) => (
-              <NavLink
-                to={`/folders/${arr.folder.id}/note/${arr.id}`}
-                key={arr.id}
-                className={({ isActive }) =>
-                  isActive
-                    ? "flex items-center pl-5 h-10 bg-red-400"
-                    : "flex items-center pl-5 h-10"
-                }
-              >
-                <div className="flex pb-1.25 items-center">
-                  <img
-                    src={Document}
-                    className="pr-4 opacity-60"
-                    alt="Document"
-                  />
-                  <p className="h-5 overflow-hidden text-[#FFFFFF] opacity-60 font-semibold">
-                    {arr.title}
-                  </p>
-                </div>
-              </NavLink>
-            ))}
-        </ul>
+        {isLoadingRecents ? (
+          <div className="text-white p-5">Loading...</div>
+        ) : (
+          <ul className="flex-col justify-evenly ">
+            {recentdata &&
+              recentdata &&
+              recentdata.slice(0, 3).map((arr) => (
+                // On click on any Particular Note  Redirect it to the given route
+                <NavLink
+                  to={`/folders/${arr.folder.id}/note/${arr.id}`}
+                  key={arr.id}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "flex items-center pl-5 h-10 bg-red-400"
+                      : "flex items-center pl-5 h-10"
+                  }
+                >
+                  <div className="flex pb-1.25 items-center">
+                    <img
+                      src={Document}
+                      className="pr-4 opacity-60"
+                      alt="Document"
+                    />
+                    <p className="h-5 overflow-hidden text-[#FFFFFF] opacity-60 font-semibold">
+                      {arr.title}
+                    </p>
+                  </div>
+                </NavLink>
+              ))}
+          </ul>
+        )}
       </div>
 
       {/* For   Folders */}
-      <div className="h-[62] w-[75]    ">
+      <div className="h-[62] w-[75]">
         <div className="flex justify justify-between text-white h-5 pr-5 pl-5">
           <div className="pb-2.5 text-[#FFFFFF] opacity-60">Folders</div>
           <button className="cursor-pointer" onClick={AddFolder}>
             <img src={Folderlogo}></img>
           </button>
         </div>
-        <ul className="overflow-y-auto max-h-[200px]">
-          {Folder.map((folders, index) => (
-            <li key={folders.id}>
-              {isediting && editingId === folders.id ? (
-                <div className="flex">
-                <img src={ClosedFolder}></img>
-                <input className="h-10 pl-5 w-full" type="text" value={newName} onChange={setNewName(e.target.value)}   onKeyDown={(e)=>e.key==="Enter" && handleRename(folders.id)} autoFocus/>
-                </div>
-              ) : (
-                <NavLink
-                  to={`/folders/${folders.id}`}
-                  onDoubleClick={() => rename(folders.id, folders.name)}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "flex items-center h-10 bg-blue-400 pl-5"
-                      : "flex items-center h-10 pl-5"
-                  }
-                >
-                  <img
-                    src={ClosedFolder}
-                    className="pr-3.75 text-white"
-                    alt="Closed Folder"
-                  />
-                  <p className="text-[#FFFFFF] opacity-60">{folders.name}</p>
-                </NavLink>
-              )}
-            </li>
-          ))}
-        </ul>
+        {isLoadingFolders ? (
+          <div className="text-white p-5">Loading...</div>
+        ) : (
+          <ul className="overflow-y-auto max-h-[200px]">
+            {Folder.map((folders, index) => (
+              <li key={folders.id}>
+                {/* If Editing ID is equal to folders.id then a input box will appear inside */}
+                {isediting && editingId === folders.id ? (
+                  <div className="flex">
+                    <img src={ClosedFolder}></img>
+                    {/* autofocus is used for focusig input when clicked && SpellCheck is because there were squigly red lines under */}
+                    <input
+                      className="h-10 pl-5 w-full focus:bg-gray-400"
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleRename(folders.id)
+                      }
+                      autoFocus
+                      spellCheck="false"
+                    />
+                  </div>
+                ) : (
+                  <NavLink
+                    to={`/folders/${folders.id}`}
+                    onDoubleClick={() => rename(folders.id, folders.name)}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "flex items-center h-10 bg-blue-400 pl-5"
+                        : "flex items-center h-10 pl-5"
+                    }
+                  >
+                    <img
+                      src={ClosedFolder}
+                      className="pr-3.75 text-white"
+                      alt="Closed Folder"
+                    />
+                    <p className="text-[#FFFFFF] opacity-60">{folders.name}</p>
+                  </NavLink>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* More */}
@@ -243,7 +280,6 @@ function Sidebar() {
           <img src={Archived} className="self-center pr-4.25"></img>
           <p className="self-center text-[#FFFFFF] opacity-60">Archive</p>
         </NavLink>
-
       </div>
     </div>
   );
