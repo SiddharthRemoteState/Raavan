@@ -12,8 +12,8 @@ function NotesList({
   setArchivedChange,
   deleteClicked,
   setDeleteClicked,
-  restore,
-  setRestore,
+  restoreClicked,
+  setRestoreClicked,
 }) {
   const { folderId } = useParams();
   const [data, setData] = useState(null);
@@ -53,9 +53,10 @@ function NotesList({
         limit: 1000,
       },
     }).then((response) => {
-      console.log(response.data);
+      // console.log(response.data);
       setData(response.data);
       setIsLoading(false);
+      // console.log(restoreClicked)
     });
   }, [
     folderId,
@@ -63,7 +64,7 @@ function NotesList({
     favoritesChange,
     archivedChange,
     deleteClicked,
-    restore,
+    restoreClicked
   ]);
 
   return (

@@ -9,19 +9,40 @@ import Trash from "../logos/Trash.svg";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { NavLink, Link, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
+import { toast } from "react-toastify";
 
 function Sidebar() {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  // for storing new folder name by default it is New Folder
-  const [newName, setNewName] = useState<string | null>("New_Folder");
+  interface Folder {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string;
+  }
+  interface Note {
+    id: string;
+    folderId: string;
+    title: string;
+    isFavorite: boolean;
+    isArchived: boolean;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string;
+    preview: string;
+    folder: Folder;
+  }
+
+  const navigate = useNavigate();
   // this is for when you are finished editing your folder name
   const [isediting, setIsEdited] = useState(false);
   // whenever we rename a folder it changes & then folders are rendered again
   const [dependencyRename, setDependencyRename] = useState("");
   // recentnotes are stored in recentdata
-  const [recentdata, setRecentData] = useState([]);
+  const [recentdata, setRecentData] = useState<Note[]>([]);
   // folders are stored in Foldr
-  const [Folder, setFolder] = useState([]);
+  const [Folder, setFolder] = useState<Folder[]>([]);
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
   // used to ensure at least one folder is Selected when adding new note
@@ -32,8 +53,15 @@ function Sidebar() {
   const [NewnoteVisible, setNewnoteVisible] = useState(true);
   const [isLoadingRecents, setIsLoadingRecents] = useState(false);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  // for storing new folder name by default it is New Folder
+  const [newName, setNewName] = useState<string | null>("New_Folder");
+  const [isFolderDeleted, setIsFolderDeleted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQueryResult, setSearchQueryResult] = useState([]);
 
-  const { folderId } = useParams();
+  const [isLoadingSearchResult, setIsLoadingSearchResult] = useState(false);
+  const { folderId, noteId } = useParams();
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
@@ -51,7 +79,7 @@ function Sidebar() {
       .catch((Errorfolder) => {
         setErrorfolder(Errorfolder);
       });
-  }, [dependencyRename]);
+  }, [dependencyRename, isFolderDeleted]);
 
   // Fetching Recents
   // Will run only once
@@ -65,9 +93,9 @@ function Sidebar() {
       .catch((error) => {
         setError(error);
       });
-  }, []);
+  }, [noteId]);
 
-  const handleRename = async (id) => {
+  const handleRename = async (id: string) => {
     //You are Finished Editing your Foldername
     setIsEdited(false);
 
@@ -98,25 +126,29 @@ function Sidebar() {
     }
     setFolderSelected(true);
     setDependencyRename("New folder");
+    toast.success("Folder Added", {
+      position: "top-left",
+      autoClose: 1000,
+    });
   };
 
-  const NewNoteClicked = () => {
-    // At least one folder needs to be selected & checking FolderSelected so that this doesnot appear on first reload
-    if (
-      FolderSelected === false &&
-      (folderId === "undefined" ||
-        folderId === "archive" ||
-        folderId === "trash" ||
-        folderId === "favorite")
-    ) {
-      alert("One of the folder needs to be Selected");
-      setFolderSelected(false);
-    }
-    // console.log("Iwas Clicked")
-  };
+  // const NewNoteClicked = () => {
+  //   // At least one folder needs to be selected & checking FolderSelected so that this doesnot appear on first reload
+  //   if (
+  //     FolderSelected === false &&
+  //     (folderId === "undefined" ||
+  //       folderId === "archive" ||
+  //       folderId === "trash" ||
+  //       folderId === "favorite")
+  //   ) {
+  //     alert("One of the folder needs to be Selected");
+  //     setFolderSelected(false);
+  //   }
+  //   // console.log("Iwas Clicked")
+  // };
 
   //Renamimg folder on doublclick
-  const rename = (id, name) => {
+  const rename = (id: string, name: string) => {
     // to track which folder has been double clicked
     setEditingId(id);
     //you are finished editing your Folder name
@@ -124,9 +156,55 @@ function Sidebar() {
     //For Storing New Folder Name
     setNewName(name);
   };
+  //For deleting Folder
+  const DeleteFolderClicked = async () => {
+    try {
+      await AxiosApi.delete(`folders/${folderId}`);
+      setIsFolderDeleted(!isFolderDeleted);
+      toast.warning("Folder Deleted Successfully", {
+        position: "top-left",
+        autoClose: 1000,
+      });
+    } catch (error) {
+      console.log("Error Countered");
+    }
+    console.log("DeleteButton Clicked");
+  };
 
-  return (
-    // Main Div
+  const handleSearchChange = (e: any) => {
+    setSearchQuery(e.target.value);
+    handleSearchInput(e);
+  };
+
+  const handleSearchInput = (e: React.KeyboardEvent) => {
+    if (searchQuery !== "") {
+      setIsLoadingSearchResult(true);
+      AxiosApi.get("/notes", {
+        params: {
+          search: searchQuery,
+        },
+      })
+        .then((response) => {
+          if (response.data) {
+            setSearchQueryResult(response.data.notes);
+            setIsLoadingSearchResult(false);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+    console.log(searchQueryResult);
+  };
+  // const searchNoteClicked=(e)=>{
+
+  // }
+
+  const firstFolderId = Folder[0]?.id;
+
+  return folderId === undefined ? (
+    firstFolderId && navigate(`/folders/${firstFolderId}`)
+  ) : (
     <div className="h-screen w-1/4  py-7.5 border-2  primary-bg flex flex-col gap-7.5">
       {/* Nowted & SearchIcon */}
       <div className="flex justify-between items-center px-5 ">
@@ -144,9 +222,35 @@ function Sidebar() {
       </div>
 
       {/* FirstHidden first hidden on Clicking Search Icon this will be Visible*/}
-      <div className={`flex px-5 h-10 ${Visible ? "" : "hidden"}`}>
-        <img src={SearchIcon} className="pr-3" alt="Search" />
-        <input placeholder="Search Note" className="text-white" />
+      <div
+        className={`flex   ${Visible ? "" : "hidden"} relative items-center `}
+      >
+        <img
+          src={SearchIcon}
+          className="absolute top-[-10] items-center flex px-5"
+          alt="Search"
+        />
+        <input
+          placeholder="Search Anything"
+          className="text-white w-full pl-10 px-5"
+          onChange={handleSearchChange}
+          value={searchQuery}
+        />
+        <ul className="max-h-40 gap-5 overflow-y-auto flex flex-col bg-[#181818] w-full absolute top-8 px-5 z-20">
+          {isLoadingSearchResult ? (
+            <li className="text-white">Loading...</li> // Simple message for loading
+          ) : (
+            searchQueryResult.map((note) => (
+              <NavLink
+                to={`/folders/${note.folder.id}/note/${note.id}`}
+                key={note.id}
+                className="text-white bg-gray-600 flex items-center justify-center hover:bg-gray-800"
+              >
+                {note.title}
+              </NavLink>
+            ))
+          )}
+        </ul>
       </div>
 
       {/* NewNote  first visible on Clicking Search Icon this will be Hidden*/}
@@ -162,7 +266,7 @@ function Sidebar() {
         >
           <button
             className="cursor-pointer w-full new-note text-white text-center"
-            onClick={NewNoteClicked}
+            // onClick={NewNoteClicked}
           >
             + New Note
           </button>
@@ -171,7 +275,7 @@ function Sidebar() {
 
       {/* Recents Notes */}
       <div className="h-39   ">
-        <div className="pl-5 pb-2 text-[#FFFFFF] opacity-60 recent-font">
+        <div className="pl-5 pb-2 text-[#FFFFFF] opacity-60 recent-font z-20">
           Recents
         </div>
         {isLoadingRecents ? (
@@ -219,7 +323,7 @@ function Sidebar() {
           <div className="text-white p-5">Loading...</div>
         ) : (
           <ul className="overflow-y-auto max-h-[200px]">
-            {Folder.map((folders, index) => (
+            {Folder.map((folders) => (
               <li key={folders.id}>
                 {/* If Editing ID is equal to folders.id then a input box will appear inside */}
                 {isediting && editingId === folders.id ? (
@@ -239,22 +343,33 @@ function Sidebar() {
                     />
                   </div>
                 ) : (
-                  <NavLink
-                    to={`/folders/${folders.id}`}
-                    onDoubleClick={() => rename(folders.id, folders.name)}
-                    className={({ isActive }) =>
-                      isActive
-                        ? "flex items-center h-10 bg-blue-400 pl-5"
-                        : "flex items-center h-10 pl-5"
-                    }
-                  >
-                    <img
-                      src={ClosedFolder}
-                      className="pr-3.75 text-white"
-                      alt="Closed Folder"
-                    />
-                    <p className="text-[#FFFFFF] opacity-60">{folders.name}</p>
-                  </NavLink>
+                  <div className="flex justify-between pr-8">
+                    <NavLink
+                      to={`/folders/${folders.id}`}
+                      onDoubleClick={() => rename(folders.id, folders.name)}
+                      className={({ isActive }) =>
+                        isActive
+                          ? "flex items-center h-10 bg-blue-400 pl-5 w-full justify-between"
+                          : "flex items-center h-10 pl-5 w-full justify-between"
+                      }
+                    >
+                      <div className="flex">
+                        <img
+                          src={ClosedFolder}
+                          className="pr-3.75 text-white"
+                          alt="Closed Folder"
+                        />
+                        <p className="text-[#FFFFFF] opacity-60">
+                          {folders.name}
+                        </p>
+                      </div>
+                      <img
+                        src={Trash}
+                        className="pl-10 cursor-pointer"
+                        onClick={DeleteFolderClicked}
+                      ></img>
+                    </NavLink>
+                  </div>
                 )}
               </li>
             ))}

@@ -11,7 +11,7 @@ function App() {
         <Route
           path="/"
           element={
-            <Navigate to={"folders/ddcb244b-2a79-4fed-b5b2-06c6ccb78c92"} />
+            <Home/>
           }
         />
         <Route path="/folders/:folderId" element={<Home />} />

@@ -8,6 +8,7 @@ import Folder from "../logos/Folderlogo.svg";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // https://nowted-server.remotestate.com/notes
 
@@ -36,6 +37,9 @@ function AddNotes({ notesChange, setNotesChange }) {
       console.log(notesdata);
       const response = AxiosApi.post("/notes", notesdata).then((response) => {
         setNotesChange(!notesChange);
+        toast.success("Note Added Successfully",{
+          autoClose:1000
+        })
       });
     } catch (error) {
       console.error("Error creating post:", error);

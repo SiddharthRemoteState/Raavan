@@ -16,21 +16,23 @@ function RestoreView({ restoreClicked, setRestoreClicked }) {
   });
 
   //For Restoring Post
-  const RestoreButton = () => {
-    const noteData = {
-      folderId,
-      title: data.title,
-      content: data.content,
-      isFavorite: false,
-      isArchived: false,
-    };
-
-    AxiosApi.post(`/notes/${noteId}/restore`, noteData).then((res) => {
+  const RestoreButton = async () => {
+    try {
+      const noteData = {
+        folderId,
+        title: data.title,
+        content: data.content,
+        isFavorite: false,
+        isArchived: false,
+      };
+      await AxiosApi.post(`/notes/${noteId}/restore`, noteData);
       navigate(`/folders/trash`);
-      //Not Working
       setRestoreClicked(!restoreClicked);
-    });
+    } catch (error) {
+      console.error("Error restoring note:", error);
+    }
   };
+  
 
   //getting notes
   useEffect(() => {
