@@ -6,12 +6,13 @@ import ClosedFolder from "../logos/ClosedFolder.svg";
 import Favorites from "../logos/Favorites.svg";
 import Archived from "../logos/Archived.svg";
 import Trash from "../logos/Trash.svg";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { NavLink, Link, useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
+import { useDebounce } from "../Hooks/Deboune";
 
 function Sidebar() {
   interface Folder {
@@ -61,6 +62,33 @@ function Sidebar() {
   const [searchQueryResult, setSearchQueryResult] = useState([]);
 
   const [isLoadingSearchResult, setIsLoadingSearchResult] = useState(false);
+  const debouncedValue = useDebounce(searchQuery, 200);
+
+  const searchNotes = useCallback(() => {
+    if (!debouncedValue) {
+      setSearchQueryResult([]);
+      return;
+    }
+    AxiosApi.get(`/notes`, {
+      params: {
+        deleted: "false",
+        page: 1,
+        limit: 10,
+        search: debouncedValue,
+      },
+    }).then((res) => {
+      setSearchQueryResult(res.data.notes);
+    });
+  }, [debouncedValue]);
+
+
+  useEffect(()=>{
+    searchNotes();
+  },
+  [searchNotes])
+
+
+
   const { folderId, noteId } = useParams();
 
   const AxiosApi = axios.create({
@@ -173,32 +201,7 @@ function Sidebar() {
 
   const handleSearchChange = (e: any) => {
     setSearchQuery(e.target.value);
-    handleSearchInput(e);
   };
-
-  const handleSearchInput = (e: React.KeyboardEvent) => {
-    if (searchQuery !== "") {
-      setIsLoadingSearchResult(true);
-      AxiosApi.get("/notes", {
-        params: {
-          search: searchQuery,
-        },
-      })
-        .then((response) => {
-          if (response.data) {
-            setSearchQueryResult(response.data.notes);
-            setIsLoadingSearchResult(false);
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
-    console.log(searchQueryResult);
-  };
-  // const searchNoteClicked=(e)=>{
-
-  // }
 
   const firstFolderId = Folder[0]?.id;
 
@@ -265,7 +268,7 @@ function Sidebar() {
           className="flex justify-center items-center w-full"
         >
           <button
-            className="cursor-pointer w-full new-note text-white text-center"
+            className="cursor-pointer w-full p-4 new-note text-white text-center"
             // onClick={NewNoteClicked}
           >
             + New Note
@@ -401,3 +404,5 @@ function Sidebar() {
 }
 
 export default Sidebar;
+
+//
