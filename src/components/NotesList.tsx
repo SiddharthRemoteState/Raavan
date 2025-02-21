@@ -2,6 +2,7 @@ import { useEffect, useState, createContext } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { NavLink } from "react-router-dom";
+import dateconversion from "../Helper/dateconversion ";
 
 function NotesList({
   notesChange,
@@ -15,13 +16,15 @@ function NotesList({
   restoreClicked,
   setRestoreClicked,
 }) {
-  const { folderId } = useParams();
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
   });
+  const { folderId } = useParams();
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  
 
   const notesTitle =
     folderId === "archive"
@@ -34,30 +37,37 @@ function NotesList({
 
   /////For Notes
   useEffect(() => {
-    const archived = folderId === "archive" ? true : false;
-    const favorite = folderId === "favorite" ? true : undefined;
-    const deleted = folderId === "trash" ? true : false;
-    // if folderID is AFT it is UNdefined
-    const folderById =
-      folderId === "archive" || folderId === "favorite" || folderId === "trash"
-        ? undefined
-        : folderId;
-    setIsLoading(true);
-    AxiosApi.get("/notes", {
-      params: {
-        archived,
-        favorite,
-        deleted,
-        folderId: folderById,
-        page: 1,
-        limit: 1000,
-      },
-    }).then((response) => {
-      // console.log(response.data);
-      setData(response.data);
-      setIsLoading(false);
-      // console.log(restoreClicked)
-    });
+    const fetchNotes = async () => {
+      const archived = folderId === "archive" ? true : false;
+      const favorite = folderId === "favorite" ? true : undefined;
+      const deleted = folderId === "trash" ? true : false;
+      const folderById =
+        folderId === "archive" || folderId === "favorite" || folderId === "trash"
+          ? undefined
+          : folderId;
+      
+      setIsLoading(true);
+  
+      try {
+        const response = await AxiosApi.get("/notes", {
+          params: {
+            archived,
+            favorite,
+            deleted,
+            folderId: folderById,
+            page: 1,
+            limit: 1000,
+          },
+        });
+        setData(response.data);
+      } catch (error) {
+        console.error('Error fetching notes:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    fetchNotes();
   }, [
     folderId,
     notesChange,
@@ -66,6 +76,7 @@ function NotesList({
     deleteClicked,
     restoreClicked
   ]);
+  
 
   return (
     <div className="w-1/4 bg-[#1C1C1C] h-screen overflow-auto">
@@ -96,10 +107,10 @@ function NotesList({
               data.notes.map((arr, index) => (
                 <NavLink to={`/folders/${folderId}/note/${arr.id}`} key={index}>
                   <div className="w-full h-24.5 bg-[#FFFFFF33] mb-4 p-5 flex-col overflow-hidden">
-                    <div className="text-white flex">{arr.title}</div>
+                    <div className="text-white flex ">{arr.title.substring(0,20)}</div>
                     <div className="flex w-full">
                       <div className="text-400 text-[#FFFFFF60] pr-2.5">
-                        {arr.createdAt}
+                        {dateconversion(arr.createdAt)                        }
                       </div>
                       <div className="text-400 text-[#FFFFFF60] overflow-hidden">
                         {arr.preview}

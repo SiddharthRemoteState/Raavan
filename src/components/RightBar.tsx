@@ -5,11 +5,13 @@ import Favorite from "../logos/Favorites.svg";
 import Archive from "../logos/Archived.svg";
 import Delete from "../logos/Trash.svg";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useDebounce } from "../Hooks/Deboune";
+import { useState, useEffect,useCallback } from "react";
 import { useParams } from "react-router-dom";
 import ClosedNoteView from "./ClosedNoteView";
 import RestoreView from "./RestoreView";
 import { useNavigate } from "react-router-dom";
+import dateconversion from "../Helper/dateconversion ";
 
 function RightBar({
   favoritesChange ,
@@ -61,10 +63,7 @@ function RightBar({
   
 
   const navigate = useNavigate();
-  const [noteTitle,setNoteTitle]=useState("");
-  const [noteContent,setNoteContent]=useState("");
-  const { noteId } = useParams();
-  const { folderId } = useParams();
+  const { noteId ,folderId} = useParams();
   const [data, setData] = useState<Data | null>(null);
   //for loading
   const [isLoading, setIsLoading] = useState(false);
@@ -74,28 +73,58 @@ function RightBar({
   const [isArchived, setIsArchived] = useState(true);
   // for toggling the archive favorite & delete button
   const [isVisible, setIsVisble] = useState(false);
+  const [titleOfNotes,setTitleOfNotes] = useState(data?.note?.title || "");
+  const [contentOfNotes,setContentOfNotes] = useState(data?.note?.content || "");
+
+
+  
+  // const debouncedValue = useDebounce({titleOfNotes,contentOfNotes}, 500);
+
+  // const debouncedNotesTitle = useCallback(() => {
+  //   if (debouncedValue) {
+  //     AxiosApi.patch(`/notes/${noteId}`, {
+  //       title: titleOfNotes, 
+  //       content:contentOfNotes,
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error updating note:', error);
+  //     });
+  //   }
+  // }, [debouncedValue, noteId, titleOfNotes,contentOfNotes]);
+  
+  // useEffect(()=>{
+  //   debouncedNotesTitle();
+  // },[debouncedNotesTitle]);
 
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
   });
 
+  // if(noteId) console.log(noteId);
+
+  // useEffect(()=>{
+  //   console.log(noteId);
+  // },[noteId])
+  
+
+  // Should Change whenever noteId Changes
+  useEffect(() => {
+    console.log(noteId);
+    setIsLoading(false);
+    if(noteId){AxiosApi.get(`/notes/${noteId}`).then((response) => {
+      setData(response.data);
+      setTitleOfNotes(response.data.note.title)
+      setContentOfNotes(response.data.note.content)
+      setIsFavorite(response.data.note.isFavorite);
+      setIsArchived(response.data.note.isArchived);
+      setIsLoading(false);
+    });}
+  }, [noteId]);
+
   // For toggling Visibility
   const handleToggle = () => {
     setIsVisble(!isVisible);
   };
-
-  // Should Change whenver noteId Changes
-  useEffect(() => {
-    setIsLoading(false);
-    AxiosApi.get(`/notes/${noteId}`).then((response) => {
-      // console.log(response.data)
-      setData(response.data);
-      setIsFavorite(response.data.note.isFavorite);
-      setIsArchived(response.data.note.isArchived);
-      setIsLoading(false);
-      console.log(response)
-    });
-  }, [noteId]);
 
   const HandleAddToFavorite = async() => {
     const newFavoriteState=!isFavorite;
@@ -112,33 +141,7 @@ function RightBar({
     catch(error){
       console.log(error);
     }
-
-
-    // AxiosApi.patch(`/notes/${noteId}`, {
-    //   isFavorite,
-    // }).then((response) => {
-    //   console.log(isFavorite)
-    //   AxiosApi.get(`/notes/${noteId}`).then((response) => {
-    //     setData(response.data);
-    //     //Depemdemcy Change to reload Notes
-    //     setFavoritesChange(!favoritesChange);
-    //   });
-    // });
   };
-
-  // const HandleAddToArchive = () => {
-  //   setIsArchived(!isArchived);
-  //   AxiosApi.patch(`/notes/${noteId}`, {
-  //     isArchived,
-  //   }).then((response) => {
-  //     AxiosApi.get(`/notes/${noteId}`).then((response) => {
-  //       setData(response.data);
-  //       //Depemdemcy Change to reload Notes
-  //       setArchivedChange(!archivedChange);
-  //       navigate(`/folders/${folderId}`);
-  //     });
-  //   });
-  // };
 
   const HandleAddToArchive = async() => {
     const changeArchiveState=!isArchived;
@@ -171,6 +174,13 @@ function RightBar({
     
   };
 
+  const HandleNotesTitleChanged=(e)=>{
+    setTitleOfNotes(e.target.value)
+  }
+  
+  const HandleNotesContentChange=(e)=>{
+    setContentOfNotes(e.target.value)
+  }
   if (noteId === undefined) return <ClosedNoteView />;
   if (folderId == "trash") return <RestoreView restoreClicked={restoreClicked} setRestoreClicked={setRestoreClicked} />;
 
@@ -182,8 +192,8 @@ function RightBar({
         <div className="w-1/2 bg-[#181818] px-12.5">
           {/* Title */}
           <div className="pt-12.5 pb-7.5 h-10 flex justify-between items-center">
-            <div className="text-white font-semibold text-[32px] ">
-              {data && data.note ? data.note.title : ""}
+            <div className="text-white font-semibold text-[32px] value={}">
+              <input value={titleOfNotes} className="text-white" onChange={HandleNotesTitleChanged}></input>
             </div>
             <div>
               <img src={ThreeDots} alt="Three Dots" onClick={handleToggle} className="items-center"/>
@@ -245,7 +255,7 @@ function RightBar({
               <img src={Calendar} className="pr-3" alt="Calendar" />
               <p className="text-[#FFFFFF60] pr-7">Date</p>
               <p className="text-white font-semibold text-4 underline">
-                {data && data.note ? data.note.createdAt : ""}
+                {data && data.note ? dateconversion(data.note.createdAt) : ""}
               </p>
             </div>
 
@@ -259,15 +269,16 @@ function RightBar({
                 {data && data.note ? data.note.folder.name : ""}
               </p>
             </div>
-            {/* For Content */}
-            <div>
-              {/* <textarea >{data.note.content}</textarea> */}
-            </div>
+            <textarea 
+              rows={50} 
+              className="overflow-y-auto h-170 text-white mt-10 w-240 " 
+              value={contentOfNotes} 
+              onChange={HandleNotesContentChange}>
+            </textarea>
+
           </div>
 
-          <div className="overflow-y-auto h-175 text-white pt-10">
-            {data && data.note ? data.note.content : ""}
-          </div>
+          
         </div>
       )}
     </>

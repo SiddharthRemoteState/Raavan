@@ -35,34 +35,25 @@ function Sidebar() {
     folder: Folder;
   }
 
-  const navigate = useNavigate();
-  // this is for when you are finished editing your folder name
   const [isediting, setIsEdited] = useState(false);
-  // whenever we rename a folder it changes & then folders are rendered again
   const [dependencyRename, setDependencyRename] = useState("");
-  // recentnotes are stored in recentdata
   const [recentdata, setRecentData] = useState<Note[]>([]);
-  // folders are stored in Foldr
   const [Folder, setFolder] = useState<Folder[]>([]);
   const [error, setError] = useState(null);
   const [Errorfolder, setErrorfolder] = useState(null);
-  // used to ensure at least one folder is Selected when adding new note
-  const [FolderSelected, setFolderSelected] = useState(false);
-  // On clicking Search Icon an input appears to track that
   const [Visible, setVisible] = useState(false);
-  // to track will there be an input for Search or Adding New Note Feature
   const [NewnoteVisible, setNewnoteVisible] = useState(true);
   const [isLoadingRecents, setIsLoadingRecents] = useState(false);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  // for storing new folder name by default it is New Folder
   const [newName, setNewName] = useState<string | null>("New_Folder");
   const [isFolderDeleted, setIsFolderDeleted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchQueryResult, setSearchQueryResult] = useState([]);
-
   const [isLoadingSearchResult, setIsLoadingSearchResult] = useState(false);
+  const navigate = useNavigate();
   const debouncedValue = useDebounce(searchQuery, 200);
+  const { folderId, noteId } = useParams();
 
   const searchNotes = useCallback(() => {
     if (!debouncedValue) {
@@ -80,49 +71,11 @@ function Sidebar() {
       setSearchQueryResult(res.data.notes);
     });
   }, [debouncedValue]);
-
-
-  useEffect(()=>{
-    searchNotes();
-  },
-  [searchNotes])
-
-
-
-  const { folderId, noteId } = useParams();
-
+  
   const AxiosApi = axios.create({
     baseURL: "https://nowted-server.remotestate.com",
   });
-
-  //Fetching Folders in Side Bar
-  // rerenders When U change folder name
-  useEffect(() => {
-    setIsLoadingFolders(true);
-    AxiosApi.get("/folders")
-      .then((response) => {
-        setFolder(response.data.folders);
-        setIsLoadingFolders(false);
-      })
-      .catch((Errorfolder) => {
-        setErrorfolder(Errorfolder);
-      });
-  }, [dependencyRename, isFolderDeleted]);
-
-  // Fetching Recents
-  // Will run only once
-  useEffect(() => {
-    setIsLoadingRecents(true);
-    AxiosApi.get("/notes/recent")
-      .then((response) => {
-        setIsLoadingRecents(false);
-        setRecentData(response.data.recentNotes);
-      })
-      .catch((error) => {
-        setError(error);
-      });
-  }, [noteId]);
-
+  
   const handleRename = async (id: string) => {
     //You are Finished Editing your Foldername
     setIsEdited(false);
@@ -134,7 +87,6 @@ function Sidebar() {
     } catch (error) {
       console.error("Error creating post:", error);
     }
-    // Changed Folder name so they should be re-rendered
     setDependencyRename("folder");
   };
 
@@ -152,28 +104,12 @@ function Sidebar() {
     } catch (error) {
       console.error("Error creating post:", error);
     }
-    setFolderSelected(true);
     setDependencyRename("New folder");
     toast.success("Folder Added", {
       position: "top-left",
       autoClose: 1000,
     });
   };
-
-  // const NewNoteClicked = () => {
-  //   // At least one folder needs to be selected & checking FolderSelected so that this doesnot appear on first reload
-  //   if (
-  //     FolderSelected === false &&
-  //     (folderId === "undefined" ||
-  //       folderId === "archive" ||
-  //       folderId === "trash" ||
-  //       folderId === "favorite")
-  //   ) {
-  //     alert("One of the folder needs to be Selected");
-  //     setFolderSelected(false);
-  //   }
-  //   // console.log("Iwas Clicked")
-  // };
 
   //Renamimg folder on doublclick
   const rename = (id: string, name: string) => {
@@ -205,8 +141,38 @@ function Sidebar() {
 
   const firstFolderId = Folder[0]?.id;
 
+  useEffect(() => {
+    setIsLoadingRecents(true);
+    AxiosApi.get("/notes/recent")
+      .then((response) => {
+        setIsLoadingRecents(false);
+        setRecentData(response.data.recentNotes);
+      })
+      .catch((error) => {
+        setError(error);
+      });
+  }, [noteId]);
+
+  
+  useEffect(() => {
+    setIsLoadingFolders(true);
+    AxiosApi.get("/folders")
+      .then((response) => {
+        setFolder(response.data.folders);
+        setIsLoadingFolders(false);
+      })
+      .catch((Errorfolder) => {
+        setErrorfolder(Errorfolder);
+      });
+  }, [dependencyRename, isFolderDeleted]);
+
+  useEffect(()=>{
+    searchNotes();
+  },
+  [searchNotes])
+
   return folderId === undefined ? (
-    firstFolderId && navigate(`/folders/${firstFolderId}`)
+    firstFolderId ? firstFolderId && navigate(`/folders/${firstFolderId}`) : <><div>Loading</div></>
   ) : (
     <div className="h-screen w-1/4  py-7.5 border-2  primary-bg flex flex-col gap-7.5">
       {/* Nowted & SearchIcon */}
@@ -328,11 +294,9 @@ function Sidebar() {
           <ul className="overflow-y-auto max-h-[200px]">
             {Folder.map((folders) => (
               <li key={folders.id}>
-                {/* If Editing ID is equal to folders.id then a input box will appear inside */}
                 {isediting && editingId === folders.id ? (
                   <div className="flex">
                     <img src={ClosedFolder}></img>
-                    {/* autofocus is used for focusig input when clicked && SpellCheck is because there were squigly red lines under */}
                     <input
                       className="h-10 pl-5 w-full focus:bg-gray-400"
                       type="text"
@@ -405,4 +369,3 @@ function Sidebar() {
 
 export default Sidebar;
 
-//

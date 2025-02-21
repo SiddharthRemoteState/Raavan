@@ -1,12 +1,11 @@
 import Home from "./Pages/Home";
 import NewNote from "./Pages/NewNote";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import {  Route, Routes } from "react-router-dom";
 import Trash from "./Pages/Trash";
-import { Navigate } from "react-router-dom";
 
 function App() {
   return (
-    <BrowserRouter>
+    
       <Routes>
         <Route
           path="/"
@@ -29,7 +28,6 @@ function App() {
 
         <Route path="/folders/:folderId/note/newnote" element={<NewNote />} />
       </Routes>
-    </BrowserRouter>
   );
 }
 
