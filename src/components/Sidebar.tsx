@@ -12,7 +12,7 @@ import { NavLink, Link, useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
-import { useDebounce } from "../Hooks/Deboune";
+import  useDebounce  from "../Hooks/Deboune";
 
 function Sidebar() {
   interface Folder {
@@ -52,29 +52,43 @@ function Sidebar() {
   const [searchQueryResult, setSearchQueryResult] = useState([]);
   const [isLoadingSearchResult, setIsLoadingSearchResult] = useState(false);
   const navigate = useNavigate();
-  const debouncedValue = useDebounce(searchQuery, 200);
+  // const debouncedValue = useDebounce(searchQuery, 200);
   const { folderId, noteId } = useParams();
+  const AxiosApi = axios.create({
+    baseURL: "https://nowted-server.remotestate.com",
+  });
 
-  const searchNotes = useCallback(() => {
-    if (!debouncedValue) {
-      setSearchQueryResult([]);
-      return;
-    }
+  
+//  const debouncedNotesTitle = useDebounce( useCallback((updateTitle:string,updateContent:string) => {
+//      if (noteId!==undefined) {
+//        AxiosApi.patch(`/notes/${noteId}`, {
+//          title: updateTitle,  
+//          content:updateContent,
+//        })
+//        .catch((error) => {
+//          console.error('Error updating note:', error);
+//        });
+//      }
+//    }, []) ,500);
+
+  const debouncedNotesTitle = useDebounce(useCallback((searchQuery:string) => {
+    // if (noteId==undefined) {
+    //   setSearchQueryResult([]);
+    //   return;
+    // }
     AxiosApi.get(`/notes`, {
       params: {
         deleted: "false",
         page: 1,
         limit: 10,
-        search: debouncedValue,
+        search: searchQuery,
       },
     }).then((res) => {
       setSearchQueryResult(res.data.notes);
     });
-  }, [debouncedValue]);
+  }, []),400);
   
-  const AxiosApi = axios.create({
-    baseURL: "https://nowted-server.remotestate.com",
-  });
+  
   
   const handleRename = async (id: string) => {
     //You are Finished Editing your Foldername
@@ -136,6 +150,7 @@ function Sidebar() {
   };
 
   const handleSearchChange = (e: any) => {
+    debouncedNotesTitle(e.target.value);
     setSearchQuery(e.target.value);
   };
 
@@ -166,10 +181,10 @@ function Sidebar() {
       });
   }, [dependencyRename, isFolderDeleted]);
 
-  useEffect(()=>{
-    searchNotes();
-  },
-  [searchNotes])
+  // useEffect(()=>{
+  //   searchNotes();
+  // },
+  // [searchNotes])
 
   return folderId === undefined ? (
     firstFolderId ? firstFolderId && navigate(`/folders/${firstFolderId}`) : <><div>Loading</div></>
